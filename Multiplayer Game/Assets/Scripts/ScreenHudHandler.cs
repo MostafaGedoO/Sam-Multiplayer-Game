@@ -7,6 +7,8 @@ public class ScreenHudHandler : MonoBehaviour
 
     [SerializeField] private TextMeshProUGUI playerName;
     [SerializeField] private TextMeshProUGUI playerTailLength;
+    [SerializeField] private GameObject winText;
+    [SerializeField] private GameObject loseText;
 
     private void Awake()
     {
@@ -16,6 +18,23 @@ public class ScreenHudHandler : MonoBehaviour
     public void SetPlayerName(string _playerName)
     {
         playerName.text = _playerName;
+    } 
+    
+    public void SetPlayerLength(string _playerName)
+    {
+        playerTailLength.text = _playerName;
+    }
+
+    public void SetPlayerEndState(bool _win)
+    {
+        if(_win)
+        {
+            winText.SetActive(true);
+        }
+        else
+        {
+            loseText.SetActive(true);
+        }
     }
 
 }

@@ -12,7 +12,7 @@ public class PlayerController : NetworkBehaviour
     
     [Header("Tail")]
     [SerializeField] private TrailRenderer trailRenderer;
-    private NetworkVariable<int> tailLength = new NetworkVariable<int>(1,NetworkVariableReadPermission.Everyone,NetworkVariableWritePermission.Owner);
+    private NetworkVariable<int> tailLength = new NetworkVariable<int>(1);
 
     private Camera mainCamera;
     private Vector2 mousePosition;
@@ -42,6 +42,11 @@ public class PlayerController : NetworkBehaviour
     {
         Debug.Log($"Player {OwnerClientId}: Tail length changed from {previousValue} to {newValue}");
         UpdateTrailRenderer();
+
+        if (IsOwner)
+        {
+            ScreenHudHandler.Instance.SetPlayerLength(tailLength.Value.ToString());
+        }
     }
 
     private void UpdateTrailRenderer()
@@ -49,13 +54,15 @@ public class PlayerController : NetworkBehaviour
         trailRenderer.time = tailLength.Value / 4f;
     }
 
-    [ContextMenu("Increase Tail")]
-    private void IncreaseSnakeTail()
+    public void IncreaseSnakeTail()
     {
-        if (IsOwner)
-        {
-            tailLength.Value++; // This will trigger OnTailLengthChanged automatically
-        }
+        IncreaseSnakeTailServerRpc();
+    }
+
+    [Rpc(SendTo.Server)]
+    private void IncreaseSnakeTailServerRpc()
+    {
+        tailLength.Value++;
     }
 
     private void Update()
@@ -80,5 +87,17 @@ public class PlayerController : NetworkBehaviour
             Vector3 rotateDirection = mouseWorldPosition - transform.position;
             transform.up = rotateDirection;
         }
+    }
+
+    public int GetTailValue()
+    {
+        return tailLength.Value;
+    }
+
+    public void SetPlayerEndState(bool _state)
+    {
+        if(!IsOwner) return;
+        ScreenHudHandler.Instance.SetPlayerEndState(_state);
+        enabled = false;
     }
 }
