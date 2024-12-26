@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -10,12 +11,18 @@ public class GameManager : NetworkBehaviour
 
     private Vector2 minMaxXY = new(15, 10);
 
-    public override void OnNetworkSpawn()
+    public override async void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
         instance = this;
+
         if(IsServer)
         {
+            while(NetworkManager.ConnectedClients.Count < 2)
+            {
+                await Task.Delay(500);
+            }
+
             for(int i = 0; i < foodToSpawn; i++)
             {
                GameObject _food = Instantiate(foodPrefabe,new Vector3(Random.Range(-minMaxXY.x,minMaxXY.x),Random.Range(-minMaxXY.y + 1,minMaxXY.y),0),Quaternion.identity);

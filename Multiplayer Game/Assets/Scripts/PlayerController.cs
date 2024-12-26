@@ -14,14 +14,12 @@ public class PlayerController : NetworkBehaviour
     [SerializeField] private TrailRenderer trailRenderer;
     private NetworkVariable<int> tailLength = new NetworkVariable<int>(1);
 
-    private Camera mainCamera;
     private Vector2 mousePosition;
     private Vector3 mouseWorldPosition;
 
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
-        mainCamera = Camera.main;
         GetComponentInChildren<SpriteRenderer>().color = playersColors[OwnerClientId];
         playerNumber.text = OwnerClientId.ToString();
         trailRenderer.startColor = playersColors[OwnerClientId];
@@ -29,13 +27,32 @@ public class PlayerController : NetworkBehaviour
 
         if (IsOwner)
         {
-            ScreenHudHandler.Instance.SetPlayerName(playerNames[OwnerClientId]);
+            if(ScreenHudHandler.Instance == null)
+            {
+                Invoke("HandlePlayerName", 0.25f);
+            }
+            else
+            {
+                ScreenHudHandler.Instance.SetPlayerName(playerNames[OwnerClientId]);
+            }
         }
 
         tailLength.OnValueChanged += OnTailLengthChanged;
         Debug.Log("Player: " + OwnerClientId + " Initial Tail Is: " + tailLength.Value);
 
         UpdateTrailRenderer();
+    }
+
+    private void HandlePlayerName()
+    {
+        if (ScreenHudHandler.Instance == null)
+        {
+            Invoke("HandlePlayerName", 0.25f);
+        }
+        else
+        {
+            ScreenHudHandler.Instance.SetPlayerName(playerNames[OwnerClientId]);
+        }
     }
 
     private void OnTailLengthChanged(int previousValue, int newValue)
@@ -77,7 +94,7 @@ public class PlayerController : NetworkBehaviour
     private void MovePlayer()
     {
         mousePosition = Input.mousePosition;
-        mouseWorldPosition = mainCamera.ScreenToWorldPoint(new Vector3(mousePosition.x,mousePosition.y,0));
+        mouseWorldPosition = Camera.main.ScreenToWorldPoint(new Vector3(mousePosition.x,mousePosition.y,0));
         mouseWorldPosition.z = 0;
 
         transform.position = Vector3.MoveTowards(transform.position, mouseWorldPosition , moveSpeed * Time.deltaTime);
