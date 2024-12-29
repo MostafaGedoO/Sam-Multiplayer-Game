@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using TMPro;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
@@ -48,6 +49,8 @@ public class LobbyManager : MonoBehaviour
 
         Lobby _lobby = await LobbyService.Instance.CreateLobbyAsync(lobbyNameField.text,4,_options);
 
+        StartCoroutine(SendLobbyHeartBeat(_lobby.Id));
+
         NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(
           allocation.RelayServer.IpV4,
           (ushort)allocation.RelayServer.Port,
@@ -58,6 +61,16 @@ public class LobbyManager : MonoBehaviour
 
         NetworkManager.Singleton.StartHost();
         NetworkManager.Singleton.SceneManager.LoadScene("GameScene", LoadSceneMode.Single);
+    }
+
+    private IEnumerator SendLobbyHeartBeat(string _lobbyId)
+    {
+        WaitForSecondsRealtime _delay = new WaitForSecondsRealtime(15);
+        while (true)
+        {
+            LobbyService.Instance.SendHeartbeatPingAsync(_lobbyId);
+            yield return _delay;
+        }
     }
 
     public async void Join(Lobby _lobby)
